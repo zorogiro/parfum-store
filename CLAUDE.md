@@ -15,6 +15,7 @@ Next.js (App Router, TypeScript, `src/`), Tailwind CSS v4, shadcn/ui, Prisma 7 +
 - **Validate every server action with Zod** (schemas in `src/lib/validators`), and never trust prices or totals from the client. Admin actions and route handlers must call `requireAdmin()`.
 - **No card data**, ever. **Cash on delivery only** in the MVP. No customer accounts.
 - **French UI.** All user-facing text goes through `src/lib/strings.ts` (no hardcoded UI strings) so Arabic can be added later.
+- **Admin auth** (Auth.js v5, JWT, credentials): `src/server/auth.ts` (`requireAdmin()`: call it first in every admin server action and route handler; the proxy is not enough), `src/server/auth.config.ts` (edge-safe config), `src/proxy.ts` (Next 16 name for middleware; guards `/admin/*`). Login attempts are limited via `src/lib/rate-limit.ts` (in-memory, per instance only; swap for DB/Redis). The app refuses to start without `AUTH_SECRET`. All `/admin` pages are `noindex`; never add them to a sitemap. Admin panel pages live in `src/app/admin/(panel)/`; the login page is outside it.
 - Prisma client is generated to `src/generated/prisma`; import the shared instance from `@/lib/db`.
 - Prisma 7: connection URLs live in `prisma.config.ts` (CLI uses `DIRECT_URL`); the app uses the pooled `DATABASE_URL` via the pg adapter. Order numbers come from `nextOrderNumber(tx)` in `src/server/order-number.ts` (Postgres sequence `order_number_seq`); call it inside the order-creating transaction.
 - Commit after each task; keep this file up to date.

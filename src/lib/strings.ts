@@ -15,6 +15,27 @@ export const fr = {
     cancel: "Annuler",
     delete: "Supprimer",
   },
+  admin: {
+    title: "Administration",
+    login: {
+      title: "Connexion administrateur",
+      email: "Email",
+      password: "Mot de passe",
+      submit: "Se connecter",
+      submitting: "Connexion…",
+      invalid: "Email ou mot de passe incorrect",
+      rateLimited: "Trop de tentatives. Réessayez dans quelques minutes.",
+    },
+    logout: "Déconnexion",
+    nav: {
+      dashboard: "Tableau de bord",
+      products: "Produits",
+      categories: "Catégories",
+      orders: "Commandes",
+      shipping: "Livraison",
+      settings: "Paramètres",
+    },
+  },
   payment: {
     cashOnDelivery: "Paiement à la livraison",
   },
