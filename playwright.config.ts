@@ -1,7 +1,9 @@
 import { defineConfig, devices } from "@playwright/test";
 
 /**
- * Smoke tests are read-only (no orders, no DB writes) and use the seeded products.
+ * cart.smoke.spec.ts is read-only (no orders, no DB writes) and uses the seeded products.
+ * checkout.write.spec.ts WRITES to the database in DATABASE_URL (orders, stock) and cleans up
+ * after itself; it is skipped unless E2E_ALLOW_DB_WRITES=1 (dev branch only).
  * They run against a production build served on port 3100 (never 3000, which is the dev server).
  * Run `npm run build` first; set E2E_BASE_URL to test an already running server instead.
  */

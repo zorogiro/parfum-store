@@ -2,6 +2,7 @@ import NextAuth from "next-auth";
 import { NextResponse, type NextFetchEvent, type NextRequest } from "next/server";
 import { authConfig } from "@/server/auth.config";
 import { catalogSlugExists } from "@/server/catalog-slugs";
+import { confirmationLinkIsValid } from "@/server/order-lookup";
 
 const { auth } = NextAuth(authConfig);
 
@@ -36,7 +37,26 @@ export default async function proxy(req: NextRequest, event: NextFetchEvent) {
     const exists = await catalogSlugExists(match[1] === "p" ? "product" : "category", slug);
     if (!exists) return NextResponse.rewrite(new URL("/introuvable", req.url));
   }
+
+  // Order confirmation: a wrong or missing number/token gets a real HTTP 404 (same page as an
+  // unknown product, so nothing leaks). A valid link is never cached or shared.
+  if (pathname === "/order/confirmation") {
+    const valid = await confirmationLinkIsValid(
+      req.nextUrl.searchParams.get("number"),
+      req.nextUrl.searchParams.get("token"),
+    );
+    if (!valid) {
+      const res = NextResponse.rewrite(new URL("/introuvable", req.url));
+      res.headers.set("Cache-Control", "no-store");
+      return res;
+    }
+    const res = NextResponse.next();
+    res.headers.set("Cache-Control", "no-store");
+    return res;
+  }
   return NextResponse.next();
 }
 
-export const config = { matcher: ["/admin", "/admin/:path*", "/p/:slug", "/c/:slug"] };
+export const config = {
+  matcher: ["/admin", "/admin/:path*", "/p/:slug", "/c/:slug", "/order/confirmation"],
+};

@@ -70,8 +70,18 @@ async function RelatedProducts({ product }: { product: ProductDetail }) {
   );
 }
 
-export default async function ProductPage({ params }: PageProps<"/p/[slug]">) {
-  // Load before any Suspense boundary so notFound() runs before streaming starts (real 404).
+// `params` is read inside Suspense: after a catalog cache invalidation (every order, every admin
+// edit) Next re-renders the route and refuses (HTTP 500) to read params outside a boundary.
+// Real 404s for unknown slugs still come from the proxy, which rewrites them before rendering.
+export default function ProductPage(props: PageProps<"/p/[slug]">) {
+  return (
+    <Suspense fallback={<ProductGridSkeleton count={4} />}>
+      <ProductContent {...props} />
+    </Suspense>
+  );
+}
+
+async function ProductContent({ params }: PageProps<"/p/[slug]">) {
   const { slug } = await params;
   const product = await loadProduct(slug);
   if (!product) notFound();

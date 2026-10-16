@@ -347,3 +347,19 @@ export async function getCategorySlugsForPrerender(): Promise<string[]> {
   const rows = await db.category.findMany({ select: { slug: true } });
   return rows.map((r) => r.slug);
 }
+
+export type ShippingZoneOption = { governorate: string; fee: number };
+
+/**
+ * Governorates and their flat fee (millimes) for the checkout select. Cached with the
+ * `settings` tag: the admin shipping page (Task 8) must call updateTag("settings") on save.
+ * The fee shown here is only for display: placeOrder reads the fee from the database.
+ */
+export async function getShippingZones(): Promise<ShippingZoneOption[]> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(SETTINGS_TAG);
+
+  const rows = await db.shippingZone.findMany({ select: { governorate: true, fee: true } });
+  return rows.sort((a, b) => a.governorate.localeCompare(b.governorate, "fr"));
+}

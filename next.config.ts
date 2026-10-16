@@ -16,8 +16,16 @@ const nextConfig: NextConfig = {
   },
   /* config options here */
   async headers() {
+    const noindex = [{ key: "X-Robots-Tag", value: "noindex, nofollow" }];
     return [
-      { source: "/admin/:path*", headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }] },
+      { source: "/admin/:path*", headers: noindex },
+      { source: "/checkout", headers: noindex },
+      { source: "/suivi", headers: noindex },
+      // Personal data: never cached by the browser, a CDN or a shared proxy.
+      {
+        source: "/order/:path*",
+        headers: [...noindex, { key: "Cache-Control", value: "no-store" }],
+      },
     ];
   },
   cacheComponents: true,
