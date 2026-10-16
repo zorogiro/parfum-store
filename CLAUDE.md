@@ -16,6 +16,7 @@ Next.js (App Router, TypeScript, `src/`), Tailwind CSS v4, shadcn/ui, Prisma 7 +
 - **No card data**, ever. **Cash on delivery only** in the MVP. No customer accounts.
 - **French UI.** All user-facing text goes through `src/lib/strings.ts` (no hardcoded UI strings) so Arabic can be added later.
 - Prisma client is generated to `src/generated/prisma`; import the shared instance from `@/lib/db`.
+- Prisma 7: connection URLs live in `prisma.config.ts` (CLI uses `DIRECT_URL`); the app uses the pooled `DATABASE_URL` via the pg adapter. Order numbers come from `nextOrderNumber(tx)` in `src/server/order-number.ts` (Postgres sequence `order_number_seq`); call it inside the order-creating transaction.
 - Commit after each task; keep this file up to date.
 
 ## Layout
@@ -36,6 +37,7 @@ Next.js (App Router, TypeScript, `src/`), Tailwind CSS v4, shadcn/ui, Prisma 7 +
 - `npm test` Vitest (unit)
 - `npm run format` Prettier
 - `npm run db:migrate` Prisma migrate dev
-- `npm run db:seed` run `prisma/seed.ts`
+- `npm run db:seed` run `prisma/seed.ts` (needs `ADMIN_EMAIL` / `ADMIN_PASSWORD`; idempotent)
+- `npx tsx scripts/verify-db.ts` print row counts of the seeded tables
 
 Copy `.env.example` to `.env` and fill it in. `.env` is gitignored.
