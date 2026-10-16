@@ -1,6 +1,7 @@
 import Form from "next/form";
 import Link from "next/link";
 import { ImageIcon, Plus } from "lucide-react";
+import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -86,6 +87,7 @@ export default async function Page({ searchParams }: PageProps<"/admin/products"
       isActive: true,
       category: { select: { name: true } },
       variants: { select: { price: true, stock: true } },
+      images: { orderBy: { position: "asc" }, take: 1, select: { url: true } },
     },
   });
 
@@ -170,12 +172,22 @@ export default async function Page({ searchParams }: PageProps<"/admin/products"
                 return (
                   <TableRow key={p.id}>
                     <TableCell>
-                      <div
-                        className="bg-muted text-muted-foreground flex size-10 items-center justify-center rounded-md"
-                        title={s.imagePlaceholder}
-                      >
-                        <ImageIcon className="size-4" aria-label={s.imagePlaceholder} />
-                      </div>
+                      {p.images[0] ? (
+                        <Image
+                          src={p.images[0].url}
+                          alt={p.name}
+                          width={40}
+                          height={40}
+                          className="size-10 rounded-md object-cover"
+                        />
+                      ) : (
+                        <div
+                          className="bg-muted text-muted-foreground flex size-10 items-center justify-center rounded-md"
+                          title={s.imagePlaceholder}
+                        >
+                          <ImageIcon className="size-4" aria-label={s.imagePlaceholder} />
+                        </div>
+                      )}
                     </TableCell>
                     <TableCell>
                       <p className="font-medium">{p.name}</p>

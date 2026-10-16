@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { MAX_PRODUCT_IMAGES } from "@/lib/cloudinary-validation";
 import { parseTND } from "@/lib/money";
 import { t } from "@/lib/strings";
 import { slugField } from "./category";
@@ -96,6 +97,13 @@ export function normalizeOptions(
   }
 }
 
+export const imageSchema = z.object({
+  publicId: z.string().max(200),
+  url: z.string().max(500),
+});
+
+export type ImageInput = z.infer<typeof imageSchema>;
+
 export const productSchema = z
   .object({
     name: z.string().trim().min(1, v.required).max(120, v.nameTooLong),
@@ -106,8 +114,22 @@ export const productSchema = z
     type: z.enum(PRODUCT_TYPES, v.required),
     isActive: z.boolean(),
     variants: z.array(variantSchema).min(1, v.minVariants).max(MAX_VARIANTS, v.maxVariants),
+    /** Ordered: the first image is the cover. */
+    images: z.array(imageSchema).max(MAX_PRODUCT_IMAGES, t.admin.products.images.tooMany),
   })
   .superRefine((product, ctx) => {
+    const ids = new Set<string>();
+    product.images.forEach((image, i) => {
+      if (ids.has(image.publicId)) {
+        ctx.addIssue({
+          code: "custom",
+          message: t.admin.products.images.duplicate,
+          path: ["images", i],
+        });
+      }
+      ids.add(image.publicId);
+    });
+
     const seen = new Set<string>();
     product.variants.forEach((variant, i) => {
       if (seen.has(variant.sku)) {

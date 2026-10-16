@@ -9,6 +9,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Field, NativeSelect } from "@/components/admin/field";
+import { ImageManager, type ImageItem } from "@/components/admin/image-manager";
 import { slugify } from "@/lib/slug";
 import { t } from "@/lib/strings";
 import { PRODUCT_TYPES, type ProductTypeValue } from "@/lib/validators/product";
@@ -39,6 +40,7 @@ export type ProductValues = {
   type: ProductTypeValue;
   isActive: boolean;
   variants: VariantRow[];
+  images: ImageItem[];
 };
 
 export type CategoryOption = { id: string; label: string };
@@ -79,6 +81,8 @@ export function ProductForm({
   const nextKey = useRef(variants.length);
   const [keys, setKeys] = useState<number[]>(() => variants.map((_, i) => i));
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [images, setImages] = useState<ImageItem[]>(product?.images ?? []);
+  const [uploading, setUploading] = useState(false);
 
   function patchVariant(index: number, patch: Partial<VariantRow>) {
     setVariants((rows) => rows.map((row, i) => (i === index ? { ...row, ...patch } : row)));
@@ -97,6 +101,10 @@ export function ProductForm({
 
   function onSubmit(event: React.FormEvent) {
     event.preventDefault();
+    if (uploading) {
+      toast.error(s.images.busy);
+      return;
+    }
     startTransition(async () => {
       const payload = {
         name,
@@ -106,6 +114,7 @@ export function ProductForm({
         categoryId,
         type,
         isActive,
+        images,
         variants: variants.map((v) => ({
           id: v.id,
           label: v.label,
@@ -397,8 +406,15 @@ export function ProductForm({
         </div>
       </section>
 
+      <ImageManager
+        images={images}
+        onChange={setImages}
+        onBusyChange={setUploading}
+        error={Object.entries(errors).find(([k]) => k === "images" || k.startsWith("images."))?.[1]}
+      />
+
       <div className="flex gap-2">
-        <Button type="submit" disabled={pending}>
+        <Button type="submit" disabled={pending || uploading}>
           {pending ? t.admin.saving : t.common.save}
         </Button>
         <Link href="/admin/products" className={buttonVariants({ variant: "outline" })}>

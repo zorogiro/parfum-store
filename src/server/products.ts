@@ -4,6 +4,7 @@ import { z } from "zod";
 import { Prisma } from "@/generated/prisma/client";
 import { db } from "@/lib/db";
 import { fail, type ActionResult } from "@/lib/action-result";
+import { isProductImagePublicId, isProductImageUrl } from "@/lib/cloudinary-validation";
 import { slugify, uniqueSlug } from "@/lib/slug";
 import { t } from "@/lib/strings";
 import { fieldErrorsFrom, idSchema } from "@/lib/validators/category";
@@ -15,6 +16,7 @@ import {
 } from "@/lib/validators/product";
 import { requireAdmin } from "@/server/auth";
 import { ActionError, revalidateCatalog, uniqueViolation } from "@/server/catalog-utils";
+import { destroyImages, getCloudName } from "@/server/cloudinary";
 
 const s = t.admin.products;
 const slugTakenErrors = { slug: t.admin.errors.slugTaken };
@@ -61,6 +63,37 @@ async function skuErrors(data: ProductData, productId?: string) {
   return errors;
 }
 
+/**
+ * Images must live in OUR cloud and OUR folder (never trust the client's URL),
+ * and a file may belong to one product only.
+ */
+async function imageErrors(data: ProductData, productId?: string) {
+  const cloudName = getCloudName();
+  const errors: Record<string, string> = {};
+  data.images.forEach((image, i) => {
+    if (
+      !isProductImagePublicId(image.publicId) ||
+      !isProductImageUrl(image.url, cloudName, image.publicId)
+    ) {
+      errors[`images.${i}`] = s.images.invalid;
+    }
+  });
+  if (Object.keys(errors).length > 0) return errors;
+
+  const used = await db.productImage.findMany({
+    where: {
+      publicId: { in: data.images.map((image) => image.publicId) },
+      ...(productId && { productId: { not: productId } }),
+    },
+    select: { publicId: true },
+  });
+  const usedSet = new Set(used.map((image) => image.publicId));
+  data.images.forEach((image, i) => {
+    if (usedSet.has(image.publicId)) errors[`images.${i}`] = s.images.inUse;
+  });
+  return errors;
+}
+
 async function validate(input: ProductInput, productId?: string) {
   const parsed = productSchema.safeParse(input);
   if (!parsed.success) {
@@ -87,6 +120,14 @@ async function validate(input: ProductInput, productId?: string) {
   const skus = await skuErrors(data, productId);
   if (Object.keys(skus).length > 0)
     return { ok: false as const, result: fail(t.admin.errors.skuTaken, skus) };
+
+  const images = await imageErrors(data, productId);
+  if (Object.keys(images).length > 0) {
+    return {
+      ok: false as const,
+      result: fail(Object.values(images)[0], { images: Object.values(images)[0] }),
+    };
+  }
 
   return { ok: true as const, data, slug };
 }
@@ -115,6 +156,13 @@ export async function createProduct(input: ProductInput): Promise<ActionResult<{
         categoryId: data.categoryId,
         type: data.type,
         isActive: data.isActive,
+        images: {
+          create: data.images.map((image, position) => ({
+            url: image.url,
+            publicId: image.publicId,
+            position,
+          })),
+        },
         variants: {
           create: data.variants.map((v, i) => ({
             sku: v.sku,
@@ -152,6 +200,7 @@ export async function updateProduct(
   if (!checked.ok) return checked.result;
   const { data, slug } = checked;
 
+  let removedImages: string[] = [];
   try {
     await db.$transaction(async (tx) => {
       await tx.product.update({
@@ -196,6 +245,30 @@ export async function updateProduct(
         await tx.variant.deleteMany({ where: { id: { in: removed.map((v) => v.id) } } });
       }
 
+      // Images: drop removed ones, re-number the kept ones, add the new ones.
+      const currentImages = await tx.productImage.findMany({
+        where: { productId: id },
+        select: { id: true, publicId: true },
+      });
+      const submitted = new Set(data.images.map((image) => image.publicId));
+      const kept = new Map(currentImages.map((image) => [image.publicId, image.id]));
+      removedImages = currentImages
+        .filter((i) => !submitted.has(i.publicId))
+        .map((i) => i.publicId);
+      await tx.productImage.deleteMany({
+        where: { productId: id, publicId: { in: removedImages } },
+      });
+      for (const [position, image] of data.images.entries()) {
+        const existingId = kept.get(image.publicId);
+        if (existingId) {
+          await tx.productImage.update({ where: { id: existingId }, data: { position } });
+        } else {
+          await tx.productImage.create({
+            data: { productId: id, url: image.url, publicId: image.publicId, position },
+          });
+        }
+      }
+
       // Updates first, then creates, so a freed SKU can be reused by a new row.
       for (const [i, v] of data.variants.entries()) {
         if (!v.id) continue;
@@ -226,6 +299,7 @@ export async function updateProduct(
         });
       }
     });
+    await destroyImages(removedImages);
     revalidateCatalog();
     return { ok: true, message: s.updated, id };
   } catch (error) {
@@ -266,7 +340,10 @@ export async function deleteProduct(id: string): Promise<ActionResult<{ softDisa
   await requireAdmin();
 
   if (!idSchema.safeParse(id).success) return fail(t.admin.errors.notFound);
-  const product = await db.product.findUnique({ where: { id }, select: { id: true } });
+  const product = await db.product.findUnique({
+    where: { id },
+    select: { id: true, images: { select: { publicId: true } } },
+  });
   if (!product) return fail(t.admin.errors.notFound);
 
   const hasOrders = async () =>
@@ -288,6 +365,7 @@ export async function deleteProduct(id: string): Promise<ActionResult<{ softDisa
     console.error("deleteProduct failed", error);
     return fail(t.admin.errors.unexpected);
   }
+  await destroyImages(product.images.map((image) => image.publicId));
   revalidateCatalog();
   return { ok: true, message: s.deleted, softDisabled: false };
 }

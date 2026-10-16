@@ -21,7 +21,10 @@ export default async function Page({ params }: PageProps<"/admin/products/[id]/e
   const [product, categories] = await Promise.all([
     db.product.findUnique({
       where: { id },
-      include: { variants: { orderBy: [{ price: "asc" }, { sku: "asc" }] } },
+      include: {
+        variants: { orderBy: [{ price: "asc" }, { sku: "asc" }] },
+        images: { orderBy: { position: "asc" } },
+      },
     }),
     getCategoryOptions(),
   ]);
@@ -36,6 +39,7 @@ export default async function Page({ params }: PageProps<"/admin/products/[id]/e
     categoryId: product.categoryId,
     type: product.type,
     isActive: product.isActive,
+    images: product.images.map((i) => ({ publicId: i.publicId, url: i.url })),
     variants: product.variants.map((v) => {
       const o = asOptions(v.options);
       return {
