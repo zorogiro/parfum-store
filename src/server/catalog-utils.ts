@@ -1,4 +1,4 @@
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { Prisma } from "@/generated/prisma/client";
 
 /** Thrown inside a transaction to roll it back with a user-facing French message. */
@@ -25,8 +25,10 @@ export function uniqueViolation(error: unknown): "slug" | "sku" | "other" | null
   return "other";
 }
 
+/** Call from server actions only (updateTag is not available in route handlers). */
 export function revalidateCatalog() {
   revalidatePath("/admin/categories");
   revalidatePath("/admin/products");
-  revalidatePath("/", "layout"); // storefront menus, listings and product pages
+  revalidatePath("/", "layout"); // storefront pages
+  updateTag("catalog"); // cached storefront queries (src/server/storefront.ts)
 }

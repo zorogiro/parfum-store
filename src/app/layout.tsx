@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { SITE_URL } from "@/lib/site";
 import { t } from "@/lib/strings";
 import "./globals.css";
 
@@ -14,8 +15,16 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: t.site.name,
+  metadataBase: new URL(SITE_URL),
+  title: { default: t.site.name, template: `%s · ${t.site.name}` },
   description: t.site.description,
+  openGraph: {
+    type: "website",
+    siteName: t.site.name,
+    locale: "fr_TN",
+    title: t.site.name,
+    description: t.site.description,
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

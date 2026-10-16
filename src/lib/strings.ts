@@ -192,6 +192,200 @@ export const fr = {
   payment: {
     cashOnDelivery: "Paiement à la livraison",
   },
+  shop: {
+    skipToContent: "Aller au contenu",
+    header: {
+      home: "Accueil – Parfum Store",
+      menu: "Menu",
+      openMenu: "Ouvrir le menu",
+      closeMenu: "Fermer le menu",
+      mainNav: "Navigation principale",
+      categories: "Catégories",
+      search: "Rechercher",
+      searchPlaceholder: "Rechercher un parfum, une marque…",
+      searchSubmit: "Lancer la recherche",
+      closeSearch: "Fermer la recherche",
+      cart: "Panier",
+      cartCount: "Panier, {count} article(s)",
+    },
+    footer: {
+      contact: "Contact",
+      callUs: "Appelez-nous",
+      phoneMissing: "Téléphone bientôt disponible",
+      follow: "Suivez-nous",
+      info: "Informations",
+      rights: "Tous droits réservés.",
+      social: {
+        facebook: "Facebook",
+        instagram: "Instagram",
+        whatsapp: "WhatsApp",
+      },
+    },
+    legal: {
+      terms: "Conditions générales",
+      privacy: "Confidentialité",
+      returns: "Retours et remboursements",
+    },
+    home: {
+      metaTitle: "Parfums, vêtements et accessoires en Tunisie",
+      heroEyebrow: "Livraison partout en Tunisie",
+      heroTitle: "Parfums, vêtements et accessoires choisis avec soin",
+      heroText: "Commandez en ligne, payez à la livraison. Nous vous appelons pour confirmer.",
+      heroCta: "Découvrir la boutique",
+      categoriesTitle: "Nos univers",
+      categoryCta: "Découvrir",
+      newTitle: "Nouveautés",
+      newEmpty: "Les premiers produits arrivent bientôt.",
+      seeAll: "Tout voir",
+      trust: {
+        cod: { title: "Paiement à la livraison", text: "Vous payez en espèces à la réception." },
+        delivery: {
+          title: "Livraison partout en Tunisie",
+          text: "Dans les 24 gouvernorats.",
+        },
+        confirmation: {
+          title: "Confirmation par téléphone",
+          text: "Nous vous appelons pour valider la commande.",
+        },
+      },
+    },
+    breadcrumbs: { label: "Fil d'Ariane", home: "Accueil" },
+    listing: {
+      productCountOne: "{count} produit",
+      productCount: "{count} produits",
+      sortBy: "Trier par",
+      sort: {
+        newest: "Nouveautés",
+        price_asc: "Prix croissant",
+        price_desc: "Prix décroissant",
+      },
+      filters: "Filtres",
+      filtersWithCount: "Filtres ({count})",
+      applyFilters: "Appliquer",
+      resetFilters: "Réinitialiser les filtres",
+      closeFilters: "Fermer les filtres",
+      priceRange: "Prix (TND)",
+      priceMin: "Min",
+      priceMax: "Max",
+      inStockOnly: "En stock uniquement",
+      brand: "Marque",
+      volume: "Volume",
+      size: "Taille",
+      color: "Couleur",
+      volumeValue: "{value} ml",
+      emptyTitle: "Aucun produit trouvé",
+      emptyFiltered: "Aucun produit ne correspond à vos filtres.",
+      emptyCategory: "Aucun produit dans cette catégorie pour le moment.",
+      backHome: "Retour à l'accueil",
+      pagination: "Pagination",
+      previous: "Précédent",
+      next: "Suivant",
+      page: "Page {page}",
+      currentPage: "Page {page} sur {count}",
+      subcategories: "Sous-catégories",
+    },
+    category: {
+      metaDescription:
+        "Découvrez notre sélection {name}. Paiement à la livraison partout en Tunisie.",
+      notFoundTitle: "Catégorie introuvable",
+    },
+    search: {
+      title: "Recherche",
+      allTitle: "Tous les produits",
+      resultsFor: "Résultats pour « {q} »",
+      placeholder: "Nom, marque ou catégorie",
+      submit: "Rechercher",
+      emptyTitle: "Aucun résultat pour « {q} »",
+      emptyText: "Vérifiez l'orthographe ou essayez un autre mot (nom, marque ou catégorie).",
+      seeAll: "Voir tous les produits",
+      metaDescription: "Recherchez parmi nos parfums, vêtements et accessoires.",
+    },
+    card: {
+      from: "À partir de {price}",
+      soldOut: "Épuisé",
+      noImage: "Aucune image",
+    },
+    notFound: {
+      title: "Page introuvable",
+      text: "Cette page n'existe pas ou n'est plus disponible.",
+    },
+    skeleton: { loading: "Chargement des produits…" },
+  },
+  legalPages: {
+    updated: "Dernière mise à jour : à compléter",
+    placeholderNotice:
+      "Texte provisoire : à remplacer par vos conditions réelles avant la mise en ligne.",
+    terms: {
+      title: "Conditions générales de vente",
+      description: "Conditions générales de vente de Parfum Store : commande, paiement, livraison.",
+      sections: [
+        {
+          heading: "1. Objet",
+          body: "Les présentes conditions régissent les ventes de produits (parfums, vêtements, accessoires) réalisées sur ce site. Toute commande implique l'acceptation de ces conditions.",
+        },
+        {
+          heading: "2. Prix",
+          body: "Les prix sont affichés en dinars tunisiens (TND), toutes taxes comprises. Les frais de livraison sont indiqués avant la validation de la commande.",
+        },
+        {
+          heading: "3. Commande et confirmation",
+          body: "Toute commande est confirmée par téléphone ou par WhatsApp avant expédition. Nous nous réservons le droit d'annuler une commande en cas d'indisponibilité du produit ou d'informations incomplètes.",
+        },
+        {
+          heading: "4. Paiement",
+          body: "Le paiement s'effectue uniquement en espèces à la livraison. Aucun paiement en ligne n'est demandé et aucune donnée de carte bancaire n'est collectée.",
+        },
+        {
+          heading: "5. Livraison",
+          body: "Nous livrons dans tous les gouvernorats de Tunisie. Le délai habituel est de 2 à 4 jours ouvrables après confirmation de la commande.",
+        },
+      ],
+    },
+    privacy: {
+      title: "Politique de confidentialité",
+      description: "Comment Parfum Store collecte et utilise vos données personnelles.",
+      sections: [
+        {
+          heading: "1. Données collectées",
+          body: "Lors d'une commande, nous collectons votre nom, votre numéro de téléphone, votre adresse de livraison et, si vous le souhaitez, votre adresse email. Nous ne collectons aucune donnée de carte bancaire.",
+        },
+        {
+          heading: "2. Utilisation",
+          body: "Ces données servent uniquement à traiter, confirmer et livrer votre commande, et à vous contacter à son sujet.",
+        },
+        {
+          heading: "3. Conservation et partage",
+          body: "Vos données sont conservées le temps nécessaire au traitement de la commande et aux obligations légales. Elles ne sont jamais vendues à des tiers.",
+        },
+        {
+          heading: "4. Vos droits",
+          body: "Vous pouvez demander l'accès, la rectification ou la suppression de vos données en nous contactant par téléphone.",
+        },
+      ],
+    },
+    returns: {
+      title: "Retours et remboursements",
+      description: "Politique de retour et d'échange de Parfum Store.",
+      sections: [
+        {
+          heading: "1. Délai de retour",
+          body: "Vous disposez de 7 jours après la réception pour demander un retour ou un échange, si le produit est neuf, non porté et dans son emballage d'origine.",
+        },
+        {
+          heading: "2. Produits non repris",
+          body: "Pour des raisons d'hygiène, les parfums ouverts ne sont ni repris ni échangés.",
+        },
+        {
+          heading: "3. Comment procéder",
+          body: "Contactez-nous par téléphone ou WhatsApp en indiquant votre numéro de commande. Nous organisons le retour avec vous.",
+        },
+        {
+          heading: "4. Remboursement",
+          body: "Une fois le produit reçu et vérifié, le remboursement est effectué en espèces ou par échange, selon votre choix.",
+        },
+      ],
+    },
+  },
 } as const;
 
 export type Strings = typeof fr;
