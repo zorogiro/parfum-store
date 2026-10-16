@@ -1,0 +1,6 @@
+.next
+node_modules
+src/generated
+src/components/ui
+package-lock.json
+docs
