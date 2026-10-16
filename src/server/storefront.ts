@@ -7,6 +7,7 @@ import {
   sortByMinPrice,
   type ListingFilters,
 } from "@/lib/catalog-query";
+import { parseThresholdSetting } from "@/lib/cart-details";
 import { db } from "@/lib/db";
 import {
   collectFacets,
@@ -74,6 +75,16 @@ export async function getStorePhone(): Promise<string | null> {
 
   const row = await db.setting.findUnique({ where: { key: "storePhone" } });
   return row?.value.trim() || null;
+}
+
+/** Free-shipping threshold in millimes, or null when disabled. Cached with the `settings` tag. */
+export async function getFreeShippingThreshold(): Promise<number | null> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(SETTINGS_TAG);
+
+  const row = await db.setting.findUnique({ where: { key: "freeShippingThreshold" } });
+  return parseThresholdSetting(row?.value);
 }
 
 export type FeaturedCategory = { id: string; name: string; slug: string; imageUrl: string | null };

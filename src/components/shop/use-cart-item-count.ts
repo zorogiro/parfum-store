@@ -1,10 +1,8 @@
 "use client";
 
-/**
- * PLACEHOLDER until the cart exists (Task 6): returns 0.
- * Task 6: replace the body with the real count from the cart context (e.g. `useCart().itemCount`);
- * `CartButton` already calls this hook, so no other file needs to change.
- */
+import { useCart } from "./cart-provider";
+
+/** Number of items in the cart (sum of quantities). 0 until the client has hydrated. */
 export function useCartItemCount(): number {
-  return 0;
+  return useCart().itemCount;
 }

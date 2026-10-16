@@ -216,6 +216,7 @@ export function ProductGallery({ images, name }: { images: GalleryImage[]; name:
       >
         <DialogContent
           showCloseButton
+          closeLabel={s.close}
           onKeyDown={onKeyDown}
           className="top-0 left-0 h-dvh w-screen max-w-none translate-x-0 translate-y-0 gap-0 rounded-none bg-black/95 p-0 text-white ring-0 sm:max-w-none"
         >
