@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { Button } from "@/components/ui/button";
+import { Toaster } from "@/components/ui/sonner";
 import { SidebarNav } from "@/components/admin/sidebar-nav";
 import { t } from "@/lib/strings";
 import { logoutAction } from "@/server/login-action";
@@ -23,7 +24,8 @@ async function AdminShell({ children }: { children: React.ReactNode }) {
           </Button>
         </form>
       </aside>
-      <main className="flex-1 p-6">{children}</main>
+      <main className="min-w-0 flex-1 p-6">{children}</main>
+      <Toaster richColors position="top-right" />
     </div>
   );
 }
