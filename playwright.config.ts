@@ -25,5 +25,7 @@ export default defineConfig({
         url: baseURL,
         reuseExistingServer: true,
         timeout: 60_000,
+        // Auth.js refuses an unknown host in production mode (UntrustedHost); the admin specs log in.
+        env: { AUTH_TRUST_HOST: "true" },
       },
 });

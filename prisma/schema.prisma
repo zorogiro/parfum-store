@@ -117,6 +117,8 @@ model Order {
   city           String
   address        String
   notes          String?
+  /// Internal note, only visible in the admin (max 1000 chars, enforced by Zod).
+  adminNote      String?
   /// Millimes
   subtotal       Int
   shippingFee    Int
@@ -124,7 +126,8 @@ model Order {
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
 
-  items OrderItem[]
+  items         OrderItem[]
+  statusHistory OrderStatusHistory[]
 
   @@index([status])
   @@index([createdAt])
@@ -148,6 +151,23 @@ model OrderItem {
 
   @@index([orderId])
   @@index([variantId])
+}
+
+model OrderStatusHistory {
+  id         String       @id @default(cuid())
+  orderId    String
+  /// null for the first row of an order
+  fromStatus OrderStatus?
+  toStatus   OrderStatus
+  changedAt  DateTime     @default(now())
+  /// Admin email, or "system" for the creation of the order
+  changedBy  String
+  note       String?
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([toStatus, changedAt])
 }
 
 model AdminUser {

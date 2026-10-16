@@ -17,7 +17,7 @@ const items = [
 export function SidebarNav() {
   const pathname = usePathname();
   return (
-    <nav className="flex flex-col gap-1">
+    <nav className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1 md:mx-0 md:flex-col md:overflow-visible md:p-0">
       {items.map(({ href, label }) => {
         const active = href === "/admin" ? pathname === href : pathname.startsWith(href);
         return (
@@ -26,7 +26,7 @@ export function SidebarNav() {
             href={href}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "hover:bg-muted rounded-lg px-3 py-2 text-sm font-medium",
+              "hover:bg-muted shrink-0 rounded-lg px-3 py-2 text-sm font-medium whitespace-nowrap",
               active && "bg-muted",
             )}
           >

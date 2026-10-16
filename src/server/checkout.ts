@@ -276,6 +276,8 @@ async function createOrder(data: CheckoutData, wanted: Map<string, number>): Pro
           shippingFee,
           total,
           items: { create: lines },
+          // First history row, in the same transaction as the order.
+          statusHistory: { create: { fromStatus: null, toStatus: "PENDING", changedBy: "system" } },
         },
         select: { number: true },
       });

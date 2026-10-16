@@ -11,11 +11,18 @@ async function AdminShell({ children }: { children: React.ReactNode }) {
   const admin = await requireAdmin();
 
   return (
-    <div className="flex min-h-screen">
-      <aside className="bg-muted/40 flex w-60 shrink-0 flex-col gap-6 border-r p-4">
-        <p className="px-3 text-sm font-semibold">{t.admin.title}</p>
+    <div className="flex min-h-screen flex-col md:flex-row">
+      <aside className="bg-muted/40 flex shrink-0 flex-col gap-3 border-b p-3 md:w-60 md:gap-6 md:border-r md:border-b-0 md:p-4">
+        <div className="flex items-center justify-between gap-2">
+          <p className="px-1 text-sm font-semibold md:px-3">{t.admin.title}</p>
+          <form action={logoutAction} className="md:hidden">
+            <Button type="submit" variant="outline" size="sm">
+              {t.admin.logout}
+            </Button>
+          </form>
+        </div>
         <SidebarNav />
-        <form action={logoutAction} className="mt-auto space-y-2">
+        <form action={logoutAction} className="mt-auto hidden space-y-2 md:block">
           <p className="text-muted-foreground truncate px-3 text-xs" title={admin.email}>
             {admin.email}
           </p>
@@ -24,7 +31,7 @@ async function AdminShell({ children }: { children: React.ReactNode }) {
           </Button>
         </form>
       </aside>
-      <main className="min-w-0 flex-1 p-6">{children}</main>
+      <main className="min-w-0 flex-1 p-4 md:p-6">{children}</main>
       <Toaster richColors position="top-right" />
     </div>
   );
