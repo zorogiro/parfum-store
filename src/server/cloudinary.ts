@@ -1,6 +1,10 @@
 import "server-only";
 import { v2 as cloudinary } from "cloudinary";
-import { ALLOWED_IMAGE_FORMATS, PRODUCT_IMAGE_FOLDER } from "@/lib/cloudinary-validation";
+import {
+  ALLOWED_IMAGE_FORMATS,
+  PRODUCT_IMAGE_FOLDER,
+  isProductImagePublicId,
+} from "@/lib/cloudinary-validation";
 
 /** Credentials from the server environment. The API secret never leaves this module. */
 function credentials() {
@@ -34,7 +38,9 @@ export function signProductUpload() {
  * Best-effort delete of files from Cloudinary. Failures are logged, never thrown,
  * so a Cloudinary outage cannot block a database change.
  */
-export async function destroyImages(publicIds: string[]) {
+export async function destroyImages(all: string[]) {
+  // Only ever touch our own folder (skips seeded placeholder rows).
+  const publicIds = all.filter(isProductImagePublicId);
   if (publicIds.length === 0) return;
   const creds = credentials();
   if (!creds) {

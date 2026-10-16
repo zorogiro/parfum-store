@@ -70,7 +70,18 @@ async function skuErrors(data: ProductData, productId?: string) {
 async function imageErrors(data: ProductData, productId?: string) {
   const cloudName = getCloudName();
   const errors: Record<string, string> = {};
+  // Images already saved on this product (e.g. seeded samples) are kept as they are;
+  // only newly attached ones must prove they come from our Cloudinary folder.
+  const existing = productId
+    ? await db.productImage.findMany({
+        where: { productId },
+        select: { publicId: true, url: true },
+      })
+    : [];
+  const alreadySaved = (image: { publicId: string; url: string }) =>
+    existing.some((e) => e.publicId === image.publicId && e.url === image.url);
   data.images.forEach((image, i) => {
+    if (alreadySaved(image)) return;
     if (
       !isProductImagePublicId(image.publicId) ||
       !isProductImageUrl(image.url, cloudName, image.publicId)
@@ -82,7 +93,7 @@ async function imageErrors(data: ProductData, productId?: string) {
 
   const used = await db.productImage.findMany({
     where: {
-      publicId: { in: data.images.map((image) => image.publicId) },
+      publicId: { in: data.images.filter((i) => !alreadySaved(i)).map((i) => i.publicId) },
       ...(productId && { productId: { not: productId } }),
     },
     select: { publicId: true },

@@ -10,6 +10,8 @@ const nextConfig: NextConfig = {
         hostname: "res.cloudinary.com",
         pathname: cloudName ? `/${cloudName}/image/upload/**` : "/**",
       },
+      // Sample images created by `npm run db:seed` (dev data only).
+      { protocol: "https", hostname: "placehold.co", pathname: "/**" },
     ],
   },
   /* config options here */
