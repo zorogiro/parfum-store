@@ -11,7 +11,7 @@ import { checkoutSchema, toFieldErrors } from "@/lib/validators/checkout";
 import { CART_MAX_QUANTITY } from "@/lib/validators/cart";
 import { MAX_QUANTITY } from "@/lib/product-variants";
 import { revalidateStock } from "./catalog-utils";
-import { checkoutFailureLimiter, orderIpLimiter, orderPhoneLimiter } from "./checkout-limits";
+import { checkoutFailureLimiter, orderIpLimiter, orderPhoneLimiter } from "./rate-limiters";
 import { sendOrderEmails } from "./email";
 import { nextOrderNumber } from "./order-number";
 import { generateTrackingToken } from "./order-token";

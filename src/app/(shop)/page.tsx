@@ -30,7 +30,7 @@ async function FeaturedCategories() {
         {s.categoriesTitle}
       </h2>
       <ul className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-3 sm:gap-4">
-        {categories.map((category) => (
+        {categories.map((category, index) => (
           <li key={category.id}>
             <Link
               href={`/c/${category.slug}`}
@@ -42,6 +42,8 @@ async function FeaturedCategories() {
                   alt=""
                   fill
                   sizes="(min-width: 1152px) 22rem, (min-width: 480px) 33vw, 100vw"
+                  loading="eager"
+                  fetchPriority={index === 0 ? "high" : "auto"}
                   className="object-cover transition-transform duration-500 group-hover:scale-105"
                 />
               )}

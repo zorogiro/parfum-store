@@ -140,6 +140,7 @@ export function buildCustomerEmail(data: OrderEmailData): EmailContent {
       `<p style="font-size:14px;margin:0">${escapeHtml(data.customerName)}<br>${escapeHtml(data.address)}<br>${escapeHtml(data.city)}, ${escapeHtml(data.governorate)}</p>` +
       `<p style="font-size:14px">${escapeHtml(s.payment)}</p>` +
       `<p style="font-size:14px"><a href="${escapeHtml(trackUrl)}">${escapeHtml(s.track)}</a></p>` +
+      `<p style="font-size:13px;color:#444"><strong>${escapeHtml(s.notYou)}</strong></p>` +
       `<p style="font-size:12px;color:#666">${escapeHtml(format(s.footer, { site: t.site.name }))}</p>`,
   );
 
@@ -156,6 +157,8 @@ export function buildCustomerEmail(data: OrderEmailData): EmailContent {
     "",
     s.payment,
     `${s.track} : ${trackUrl}`,
+    "",
+    s.notYou,
   ].join("\n");
 
   return { subject: oneLine(format(s.subject, { number: data.number })), html, text };

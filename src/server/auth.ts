@@ -3,7 +3,7 @@ import NextAuth, { CredentialsSignin } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { loginRateLimiter } from "@/lib/rate-limit";
+import { loginRateLimiter } from "./rate-limiters";
 import { loginSchema } from "@/lib/validators/auth";
 import { authConfig } from "./auth.config";
 

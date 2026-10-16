@@ -1,5 +1,6 @@
 import "server-only";
 import { v2 as cloudinary } from "cloudinary";
+import { logServerError } from "./log";
 import {
   ALLOWED_IMAGE_FORMATS,
   PRODUCT_IMAGE_FOLDER,
@@ -61,7 +62,7 @@ export async function destroyImages(all: string[]) {
           console.error("Cloudinary destroy returned", res.result, publicId);
         }
       } catch (error) {
-        console.error("Cloudinary destroy failed", publicId, error);
+        logServerError("cloudinary destroy", error);
       }
     }),
   );

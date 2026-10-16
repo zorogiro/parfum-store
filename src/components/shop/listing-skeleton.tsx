@@ -10,7 +10,7 @@ export function ListingSkeleton() {
         <div className="bg-muted h-10 w-28 animate-pulse rounded-lg" />
         <div className="bg-muted h-10 w-40 animate-pulse rounded-lg" />
       </div>
-      <ProductGridSkeleton count={12} />
+      <ProductGridSkeleton count={4} />
     </div>
   );
 }

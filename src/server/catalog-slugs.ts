@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { logServerError } from "./log";
 
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const MAX_SLUG_LENGTH = 120;
@@ -37,7 +38,7 @@ export async function catalogSlugExists(kind: SlugKind, slug: string): Promise<b
     hits.set(key, now + HIT_TTL_MS);
     return true;
   } catch (error) {
-    console.error("catalogSlugExists failed, letting the page decide", error);
+    logServerError("catalogSlugExists", error);
     return true;
   }
 }

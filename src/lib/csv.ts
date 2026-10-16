@@ -3,16 +3,20 @@
  * - Delimiter is ";" (French Excel default); every cell containing the delimiter, a comma, a
  *   quote or a line break is quoted, quotes are doubled.
  * - Formula injection guard: a TEXT cell starting with = + - @ tab or carriage return is
- *   prefixed with a single quote so spreadsheets never evaluate it.
+ *   prefixed with a single quote so spreadsheets never evaluate it. The one exemption is a
+ *   normalized Tunisian phone (+216 and exactly 8 digits): it cannot carry a formula and must
+ *   stay a clean number in the export.
  */
 
 export const CSV_DELIMITER = ";";
 export const CSV_BOM = "﻿";
 
 const FORMULA_START = /^[=+\-@\t\r]/;
+const NORMALIZED_PHONE = /^\+216[0-9]{8}$/;
 
 /** Neutralizes spreadsheet formulas in a text value. */
 export function neutralizeFormula(text: string): string {
+  if (NORMALIZED_PHONE.test(text)) return text;
   return FORMULA_START.test(text) ? `'${text}` : text;
 }
 

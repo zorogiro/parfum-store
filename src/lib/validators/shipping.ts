@@ -1,3 +1,4 @@
+import "@/lib/zod-config";
 import { z } from "zod";
 import { parseTND } from "@/lib/money";
 import { t } from "@/lib/strings";

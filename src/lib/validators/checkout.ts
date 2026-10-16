@@ -1,3 +1,4 @@
+import "@/lib/zod-config";
 import { z } from "zod";
 import { normalizeTunisianPhone } from "@/lib/phone";
 import { t } from "@/lib/strings";

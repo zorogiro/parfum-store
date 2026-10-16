@@ -9,6 +9,11 @@ describe("formula injection guard", () => {
     },
   );
 
+  it("exempts a normalized Tunisian phone (+216 and exactly 8 digits)", () => {
+    expect(neutralizeFormula("+21622123456")).toBe("+21622123456");
+    expect(csvCell("+21698765432")).toBe("+21698765432");
+  });
+
   it("leaves harmless text alone, including a dash or plus in the middle", () => {
     expect(neutralizeFormula("Tunis")).toBe("Tunis");
     expect(neutralizeFormula("rue 5-7 + bis")).toBe("rue 5-7 + bis");

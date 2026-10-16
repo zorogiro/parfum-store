@@ -1,6 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
+import { logServerError } from "./log";
 import { fail, type ActionResult } from "@/lib/action-result";
 import { slugify, uniqueSlug } from "@/lib/slug";
 import { t } from "@/lib/strings";
@@ -77,7 +78,7 @@ export async function createCategory(input: CategoryInput): Promise<ActionResult
     if (uniqueViolation(error)) {
       return fail(t.admin.errors.slugTaken, { slug: t.admin.errors.slugTaken });
     }
-    console.error("createCategory failed", error);
+    logServerError("createCategory", error);
     return fail(t.admin.errors.unexpected);
   }
 }
@@ -114,7 +115,7 @@ export async function updateCategory(
     if (uniqueViolation(error)) {
       return fail(t.admin.errors.slugTaken, { slug: t.admin.errors.slugTaken });
     }
-    console.error("updateCategory failed", error);
+    logServerError("updateCategory", error);
     return fail(t.admin.errors.unexpected);
   }
 }
@@ -138,7 +139,7 @@ export async function deleteCategory(id: string): Promise<ActionResult> {
     await db.category.delete({ where: { id } });
   } catch (error) {
     // A product/subcategory was added between the check and the delete (FK Restrict).
-    console.error("deleteCategory failed", error);
+    logServerError("deleteCategory", error);
     return fail(s.blockedProducts);
   }
   revalidateCatalog();

@@ -1,3 +1,4 @@
+import "@/lib/zod-config";
 import { z } from "zod";
 
 /** Order numbers look like ORD-000123 (see src/server/order-number.ts). */

@@ -21,8 +21,14 @@ export async function closeDb() {
 
 export const FAKE_NAME = "TEST E2E Client";
 
+/** The limiter lives in the database now: forget earlier runs so the browser IP is not blocked. */
+export async function clearRateLimits() {
+  await sql().query(`DELETE FROM "RateLimitBucket"`);
+}
+
 /** Orders created by the specs are recognised by this name and deleted afterwards. */
 export async function deleteTestOrders() {
+  await clearRateLimits();
   const db = sql();
   await db.query(
     `DELETE FROM "OrderItem" WHERE "orderId" IN (SELECT id FROM "Order" WHERE "customerName" = $1)`,

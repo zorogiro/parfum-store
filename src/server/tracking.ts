@@ -5,7 +5,7 @@ import type { TrackOrderResult } from "@/lib/checkout-types";
 import { normalizeTunisianPhone } from "@/lib/phone";
 import { t } from "@/lib/strings";
 import { orderNumberSchema, trackingLookupSchema } from "@/lib/validators/tracking";
-import { trackingLimiter } from "./checkout-limits";
+import { trackingLimiter } from "./rate-limiters";
 import { getClientIp } from "./request-ip";
 
 const s = t.shop.tracking;
@@ -20,10 +20,10 @@ export async function trackOrder(input: unknown): Promise<TrackOrderResult> {
   const ip = await getClientIp();
   const key = `ip:${ip}`;
 
-  if (await trackingLimiter.isBlocked(key)) {
+  // Atomic: every lookup counts, hit or miss, and concurrent requests cannot all slip under.
+  if (!(await trackingLimiter.consume(key))) {
     return { ok: false, code: "RATE_LIMITED", error: s.rateLimited };
   }
-  await trackingLimiter.recordFailure(key); // every lookup counts, hit or miss
 
   const parsed = trackingLookupSchema.safeParse(input);
   if (!parsed.success) return notFound();

@@ -15,6 +15,8 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   retries: 0,
+  // The database is remote (Neon): saves and redirects can take a few seconds.
+  expect: { timeout: 10_000 },
   reporter: [["list"]],
   use: { baseURL, trace: "retain-on-failure", locale: "fr-FR" },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],

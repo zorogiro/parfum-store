@@ -1,6 +1,7 @@
 import { randomBytes, randomUUID } from "node:crypto";
 import { expect, test, type Page } from "@playwright/test";
 import { formatTND } from "../src/lib/money";
+import { normalizeTunisianPhone } from "../src/lib/phone";
 import { FAKE_NAME, closeDb, deleteTestOrders, sql, writesAllowed } from "./helpers/db";
 
 /**
@@ -324,6 +325,90 @@ test("admin: shipping and settings pages validate and save (values restored)", a
     }
     for (const s of settings) {
       await sql().query(`UPDATE "Setting" SET value = $1 WHERE key = $2`, [s.value, s.key]);
+    }
+  }
+});
+
+test("admin: saved shipping fee, threshold and store phone are live on the storefront", async ({
+  page,
+}) => {
+  // Proves updateTag("settings") works: the cached storefront data changes right after a save.
+  const zone = (
+    await sql().query(
+      `SELECT id, governorate, fee FROM "ShippingZone" ORDER BY governorate LIMIT 1`,
+    )
+  ).rows[0];
+  const threshold = (
+    await sql().query(`SELECT value FROM "Setting" WHERE key = 'freeShippingThreshold'`)
+  ).rows[0]?.value as string | undefined;
+  const phone = (await sql().query(`SELECT value FROM "Setting" WHERE key = 'storePhone'`)).rows[0]
+    ?.value as string | undefined;
+
+  const saveShipping = async (fee: string, thresholdTnd: string) => {
+    await page.goto("/admin/shipping");
+    await page.getByLabel("Seuil de livraison gratuite (TND)").fill(thresholdTnd);
+    await page.getByLabel(new RegExp(`Frais \\(TND\\) – ${zone.governorate}`)).fill(fee);
+    await page.getByRole("button", { name: "Enregistrer les frais" }).click();
+    await expect(page.getByText("Frais de livraison enregistrés.")).toBeVisible();
+  };
+  const checkoutShippingText = async () => {
+    await page.goto("/checkout");
+    await expect(page.locator("[data-hydrated=true]")).toBeAttached();
+    await page.getByLabel("Gouvernorat").selectOption({ label: zone.governorate });
+    return page.getByTestId("checkout-shipping");
+  };
+
+  try {
+    // The cart only holds {variantId, quantity}, seeded straight into localStorage.
+    await page.goto("/");
+    await page.evaluate(
+      ([key, id]) => localStorage.setItem(key, JSON.stringify([{ variantId: id, quantity: 1 }])),
+      [CART_KEY, variantId] as const,
+    );
+    await login(page);
+
+    // 1. Threshold disabled, fee 9.250 TND: the checkout shows the new fee immediately.
+    await saveShipping("9.250", "0");
+    await expect(await checkoutShippingText()).toHaveText(formatTND(9250));
+
+    // 2. Another fee: the old one is gone.
+    await saveShipping("12.500", "0");
+    await expect(await checkoutShippingText()).toHaveText(formatTND(12500));
+
+    // 3. A 1 TND threshold: the cart is above it, so shipping becomes free.
+    await saveShipping("12.500", "1");
+    await expect(await checkoutShippingText()).toHaveText("Gratuite");
+
+    // 4. The store phone in the footer follows /admin/settings.
+    await page.goto("/admin/settings");
+    await page.getByLabel("Téléphone de la boutique").fill("71 765 432");
+    await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
+    await expect(page.getByText("Paramètres enregistrés.")).toBeVisible();
+    await page.goto("/");
+    await expect(page.getByRole("contentinfo").getByText("+21671765432")).toBeVisible();
+  } finally {
+    // Restore through the admin UI (not SQL) so the cached storefront data is invalidated too.
+    try {
+      await saveShipping(String(zone.fee / 1000), String(Number(threshold ?? "0") / 1000));
+      // The seeded placeholder phone (+21600000000) is not a valid number for the form, so it can
+      // only be restored with SQL below (the footer then keeps the test phone until the cache
+      // expires, in this test server only).
+      if (phone !== undefined && normalizeTunisianPhone(phone)) {
+        await page.goto("/admin/settings");
+        await page.getByLabel("Téléphone de la boutique").fill(phone);
+        await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
+        await expect(page.getByText("Paramètres enregistrés.")).toBeVisible();
+      }
+    } finally {
+      await sql().query(`UPDATE "ShippingZone" SET fee = $1 WHERE id = $2`, [zone.fee, zone.id]);
+      if (threshold !== undefined) {
+        await sql().query(`UPDATE "Setting" SET value = $1 WHERE key = 'freeShippingThreshold'`, [
+          threshold,
+        ]);
+      }
+      if (phone !== undefined) {
+        await sql().query(`UPDATE "Setting" SET value = $1 WHERE key = 'storePhone'`, [phone]);
+      }
     }
   }
 });

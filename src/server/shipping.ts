@@ -27,11 +27,13 @@ export async function updateShipping(input: ShippingInput): Promise<ActionResult
     await db.$transaction(async (tx) => {
       const known = await tx.shippingZone.findMany({
         where: { id: { in: zones.map((z) => z.id) } },
-        select: { id: true },
+        select: { id: true, fee: true },
       });
       if (known.length !== zones.length) throw new Error("UNKNOWN_ZONE");
 
-      for (const zone of zones) {
+      // Only write the fees that changed: 24 sequential UPDATEs are slow on a remote database.
+      const current = new Map(known.map((z) => [z.id, z.fee]));
+      for (const zone of zones.filter((z) => current.get(z.id) !== z.fee)) {
         await tx.shippingZone.update({ where: { id: zone.id }, data: { fee: zone.fee } });
       }
       await tx.setting.upsert({

@@ -5,12 +5,21 @@ import { ProductCard } from "./product-card";
 export const GRID_CLASSES =
   "grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 sm:gap-x-4 lg:grid-cols-4";
 
-export function ProductGrid({ products }: { products: ProductCardData[] }) {
+export function ProductGrid({
+  products,
+  eagerCount = 0,
+  headingLevel = 3,
+}: {
+  products: ProductCardData[];
+  /** How many leading cards are above the fold (their images load eagerly). */
+  eagerCount?: number;
+  headingLevel?: 2 | 3;
+}) {
   return (
     <ul className={GRID_CLASSES}>
-      {products.map((product) => (
+      {products.map((product, index) => (
         <li key={product.id}>
-          <ProductCard product={product} />
+          <ProductCard product={product} eager={index < eagerCount} headingLevel={headingLevel} />
         </li>
       ))}
     </ul>

@@ -37,6 +37,7 @@ describe.skipIf(!enabled)("placeOrder (database)", () => {
   let zoneFee: number;
   let threshold: number | null;
   let ipCounter = 0;
+  const runOctet = 1 + Math.floor(Math.random() * 250);
   let phoneCounter = 0;
 
   beforeAll(async () => {
@@ -127,7 +128,8 @@ describe.skipIf(!enabled)("placeOrder (database)", () => {
 
   async function place(input: ReturnType<typeof payload>) {
     ipCounter += 1;
-    state.ip = `10.1.${Math.floor(ipCounter / 250)}.${ipCounter % 250}`;
+    // Random second octet per run: the DB-backed limiter remembers IPs from earlier runs.
+    state.ip = `10.${runOctet}.${Math.floor(ipCounter / 250)}.${ipCounter % 250}`;
     return placeOrder(input);
   }
 

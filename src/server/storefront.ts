@@ -363,3 +363,25 @@ export async function getShippingZones(): Promise<ShippingZoneOption[]> {
   const rows = await db.shippingZone.findMany({ select: { governorate: true, fee: true } });
   return rows.sort((a, b) => a.governorate.localeCompare(b.governorate, "fr"));
 }
+
+export type SitemapData = {
+  categories: { slug: string }[];
+  products: { slug: string; updatedAt: Date }[];
+};
+
+/** Everything the sitemap lists: all categories and ACTIVE products only. Cached, tag `catalog`. */
+export async function getSitemapData(): Promise<SitemapData> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(CATALOG_TAG);
+
+  const [categories, products] = await Promise.all([
+    db.category.findMany({ orderBy: { slug: "asc" }, select: { slug: true } }),
+    db.product.findMany({
+      where: { isActive: true },
+      orderBy: { slug: "asc" },
+      select: { slug: true, updatedAt: true },
+    }),
+  ]);
+  return { categories, products };
+}

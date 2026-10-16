@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { Prisma } from "@/generated/prisma/client";
 import { db } from "@/lib/db";
+import { logServerError } from "./log";
 import { fail, type ActionResult } from "@/lib/action-result";
 import { isProductImagePublicId, isProductImageUrl } from "@/lib/cloudinary-validation";
 import { slugify, uniqueSlug } from "@/lib/slug";
@@ -192,7 +193,7 @@ export async function createProduct(input: ProductInput): Promise<ActionResult<{
   } catch (error) {
     const known = uniqueErrorResult(error);
     if (known) return known;
-    console.error("createProduct failed", error);
+    logServerError("createProduct", error);
     return fail(t.admin.errors.unexpected);
   }
 }
@@ -317,7 +318,7 @@ export async function updateProduct(
     if (error instanceof ActionError) return fail(error.message, error.fieldErrors);
     const known = uniqueErrorResult(error);
     if (known) return known;
-    console.error("updateProduct failed", error);
+    logServerError("updateProduct", error);
     return fail(t.admin.errors.unexpected);
   }
 }
@@ -336,7 +337,7 @@ export async function setProductActive(id: string, isActive: boolean): Promise<A
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
       return fail(t.admin.errors.notFound);
     }
-    console.error("setProductActive failed", error);
+    logServerError("setProductActive", error);
     return fail(t.admin.errors.unexpected);
   }
   revalidateCatalog();
@@ -373,7 +374,7 @@ export async function deleteProduct(id: string): Promise<ActionResult<{ softDisa
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2003") {
       return await disable();
     }
-    console.error("deleteProduct failed", error);
+    logServerError("deleteProduct", error);
     return fail(t.admin.errors.unexpected);
   }
   await destroyImages(product.images.map((image) => image.publicId));

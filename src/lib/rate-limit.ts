@@ -1,12 +1,11 @@
 /**
- * Failed-attempt rate limiting behind a small async interface, so the
- * in-memory implementation can later be swapped for a DB or Redis one.
+ * Failed-attempt rate limiting behind a small async interface.
  *
- * WARNING: the in-memory limiter keeps its counters in the memory of a single
- * process. It does NOT work across serverless instances (each instance has its
- * own counters, and they are lost on cold start), so on Vercel it only slows
- * down an attacker; it does not enforce a hard limit. Replace it with a shared
- * store before relying on it.
+ * Two implementations:
+ * - InMemoryRateLimiter (this file): per process, lost on cold start. Only for unit tests and
+ *   local tooling; on serverless it cannot enforce a hard limit.
+ * - DbRateLimiter (src/server/db-rate-limiter.ts): Postgres-backed, shared by every instance.
+ *   The named limiters used by the app live in src/server/rate-limiters.ts.
  */
 export interface RateLimiter {
   /** True when `key` has used up its failed attempts in the current window. */
@@ -15,6 +14,11 @@ export interface RateLimiter {
   recordFailure(key: string): Promise<void>;
   /** Forget all failures for `key` (e.g. after a successful login). */
   reset(key: string): Promise<void>;
+  /**
+   * Atomically count one use of `key` and say whether it was within the limit. Unlike
+   * isBlocked + recordFailure, concurrent callers cannot all slip under the limit.
+   */
+  consume(key: string): Promise<boolean>;
 }
 
 export interface InMemoryRateLimiterOptions {
@@ -51,6 +55,11 @@ export class InMemoryRateLimiter implements RateLimiter {
     this.entries.delete(key);
   }
 
+  async consume(key: string): Promise<boolean> {
+    await this.recordFailure(key);
+    return this.live(key)!.count <= this.options.maxFailures;
+  }
+
   /** The entry for `key`, or undefined if absent or its window has expired. */
   private live(key: string) {
     const entry = this.entries.get(key);
@@ -69,9 +78,3 @@ export class InMemoryRateLimiter implements RateLimiter {
     }
   }
 }
-
-/** 5 failed attempts per 15 minutes. */
-export const loginRateLimiter: RateLimiter = new InMemoryRateLimiter({
-  maxFailures: 5,
-  windowMs: 15 * 60 * 1000,
-});

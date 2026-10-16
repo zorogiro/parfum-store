@@ -2,6 +2,7 @@ import "server-only";
 import { Resend } from "resend";
 import { buildCustomerEmail, buildMerchantEmail, type OrderEmailData } from "@/lib/order-email";
 import { db } from "@/lib/db";
+import { customerEmailLimiter } from "./rate-limiters";
 
 const DEFAULT_FROM = "onboarding@resend.dev";
 const SEND_TIMEOUT_MS = 8000;
@@ -71,11 +72,19 @@ export async function sendOrderEmails(data: OrderEmailData): Promise<void> {
     logFailure("notification setting lookup", error);
   }
 
+  // The customer address is whatever was typed at checkout: cap confirmations per address so the
+  // shop cannot be used to mail-bomb someone. The merchant notification is never limited.
+  let sendCustomer = false;
+  if (data.email) {
+    sendCustomer = await customerEmailLimiter.consume(data.email.trim().toLowerCase());
+    if (!sendCustomer) console.error("[email] customer confirmation skipped (rate limited)");
+  }
+
   await Promise.all([
     merchantTo
       ? send("merchant notification", merchantTo, buildMerchantEmail(data))
       : Promise.resolve(console.error("[email] notificationEmail setting is empty, skipped")),
-    data.email
+    sendCustomer && data.email
       ? send("customer confirmation", data.email, buildCustomerEmail(data))
       : Promise.resolve(),
   ]);

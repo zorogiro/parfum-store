@@ -12,7 +12,18 @@ const s = t.shop.card;
 /** Matches the grid: 2 columns on mobile, 3 from `sm`, 4 from `lg` (max container 72rem). */
 export const PRODUCT_CARD_SIZES = "(min-width: 1024px) 18rem, (min-width: 640px) 33vw, 50vw";
 
-export function ProductCard({ product }: { product: ProductCardData }) {
+export function ProductCard({
+  product,
+  eager = false,
+  headingLevel = 3,
+}: {
+  product: ProductCardData;
+  /** Above-the-fold card: load its image right away with a high fetch priority (LCP). */
+  eager?: boolean;
+  /** 2 when the card directly follows the page h1 (listings), 3 under a section h2. */
+  headingLevel?: 2 | 3;
+}) {
+  const Heading = `h${headingLevel}` as const;
   const price =
     product.price === null
       ? null
@@ -32,6 +43,8 @@ export function ProductCard({ product }: { product: ProductCardData }) {
             alt={product.name}
             fill
             sizes={PRODUCT_CARD_SIZES}
+            loading={eager ? "eager" : "lazy"}
+            fetchPriority={eager ? "high" : "auto"}
             className={`object-cover transition-transform duration-300 group-hover:scale-105 ${
               product.soldOut ? "opacity-60" : ""
             }`}
@@ -53,7 +66,7 @@ export function ProductCard({ product }: { product: ProductCardData }) {
             {product.brand}
           </p>
         )}
-        <h3 className="line-clamp-2 text-sm leading-snug font-medium">{product.name}</h3>
+        <Heading className="line-clamp-2 text-sm leading-snug font-medium">{product.name}</Heading>
         {price && (
           <p className="flex flex-wrap items-baseline gap-x-2 pt-0.5 text-sm">
             <span className="font-semibold">{price}</span>

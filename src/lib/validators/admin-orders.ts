@@ -1,3 +1,4 @@
+import "@/lib/zod-config";
 import { z } from "zod";
 import { ORDER_STATUSES } from "@/lib/order-status";
 import { t } from "@/lib/strings";

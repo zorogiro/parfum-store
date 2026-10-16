@@ -176,3 +176,14 @@ model AdminUser {
   passwordHash String
   createdAt    DateTime @default(now())
 }
+
+/// Fixed-window counters for src/server/db-rate-limiter.ts. `key` is an HMAC of
+/// "<limiter>:<subject>", so no IP, phone or email is stored in clear.
+model RateLimitBucket {
+  key     String   @id
+  count   Int
+  /// End of the window (database clock). Expired rows are deleted opportunistically.
+  resetAt DateTime
+
+  @@index([resetAt])
+}

@@ -7,6 +7,18 @@ export const fr = {
     name: "Parfum Store",
     description: "Parfums, vêtements et accessoires, livrés partout en Tunisie.",
   },
+  errors: {
+    title: "Une erreur est survenue",
+    text: "Désolé, quelque chose s'est mal passé de notre côté. Vos données n'ont pas été perdues. Vous pouvez réessayer ou revenir à l'accueil.",
+    retry: "Réessayer",
+    home: "Retour à l'accueil",
+    reference: "Référence : {digest}",
+    admin: {
+      title: "Erreur dans l'administration",
+      text: "Cette page n'a pas pu être affichée. Réessayez ; si le problème persiste, consultez les journaux du serveur avec la référence ci-dessous.",
+      back: "Retour au tableau de bord",
+    },
+  },
   common: {
     addToCart: "Ajouter au panier",
     outOfStock: "Épuisé",
@@ -770,6 +782,8 @@ export const fr = {
       payment: "Vous payez en espèces au livreur à la réception.",
       track: "Suivre ma commande",
       footer: "Cet email a été envoyé suite à une commande passée sur {site}.",
+      notYou:
+        "Si vous n'avez pas passé cette commande, ignorez simplement cet email : aucune action n'est nécessaire.",
     },
   },
   legalPages: {
