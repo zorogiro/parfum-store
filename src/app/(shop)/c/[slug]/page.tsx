@@ -8,10 +8,23 @@ import { ListingView } from "@/components/shop/listing-view";
 import { parseListingParams } from "@/lib/catalog-query";
 import { t } from "@/lib/strings";
 import { format } from "@/lib/utils";
-import { getCategoryBySlug, getCategoryFacets, getCategoryListing } from "@/server/storefront";
+import {
+  getCategoryBySlug,
+  getCategoryFacets,
+  getCategoryListing,
+  getCategorySlugsForPrerender,
+  type CategoryInfo,
+} from "@/server/storefront";
 
 const s = t.shop;
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+// Cache Components needs at least one sample slug to prerender the route shell. Unknown slugs
+// are rendered on demand; the proxy (src/proxy.ts) answers them with a real 404.
+export async function generateStaticParams() {
+  const slugs = await getCategorySlugsForPrerender();
+  return (slugs.length > 0 ? slugs : ["categorie-exemple"]).map((slug) => ({ slug }));
+}
 
 async function loadCategory(slug: string) {
   if (slug.length > 100 || !SLUG_PATTERN.test(slug)) return null;
@@ -39,11 +52,13 @@ export async function generateMetadata({ params }: PageProps<"/c/[slug]">): Prom
   };
 }
 
-async function CategoryContent({ params, searchParams }: PageProps<"/c/[slug]">) {
-  const { slug } = await params;
-  const category = await loadCategory(slug);
-  if (!category) notFound();
-
+async function CategoryContent({
+  category,
+  searchParams,
+}: {
+  category: CategoryInfo;
+  searchParams: PageProps<"/c/[slug]">["searchParams"];
+}) {
   const filters = parseListingParams(await searchParams);
   const [result, facets] = await Promise.all([
     getCategoryListing(category.categoryIds, filters),
@@ -90,10 +105,16 @@ async function CategoryContent({ params, searchParams }: PageProps<"/c/[slug]">)
   );
 }
 
-export default function CategoryPage(props: PageProps<"/c/[slug]">) {
+export default async function CategoryPage({ params, searchParams }: PageProps<"/c/[slug]">) {
+  // Load before any Suspense boundary (and without a loading.tsx, which would be one) so
+  // notFound() runs before streaming starts and the response is a real 404.
+  const { slug } = await params;
+  const category = await loadCategory(slug);
+  if (!category) notFound();
+
   return (
     <Suspense fallback={<ListingSkeleton />}>
-      <CategoryContent {...props} />
+      <CategoryContent category={category} searchParams={searchParams} />
     </Suspense>
   );
 }

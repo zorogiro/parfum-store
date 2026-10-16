@@ -243,3 +243,96 @@ export async function getCategoryListing(
 export async function searchProducts(q: string, filters: ListingFilters): Promise<ListingResult> {
   return runListing({ AND: [{ isActive: true }, buildSearchWhere(q)] }, filters);
 }
+
+export type ProductDetail = {
+  id: string;
+  slug: string;
+  name: string;
+  description: string;
+  brand: string | null;
+  type: "PERFUME" | "CLOTHING" | "ACCESSORY";
+  categoryId: string;
+  category: { name: string; slug: string; parent: { name: string; slug: string } | null };
+  /** Ordered by position, first = cover. */
+  images: { id: string; url: string }[];
+  variants: {
+    id: string;
+    sku: string;
+    label: string;
+    price: number;
+    compareAtPrice: number | null;
+    stock: number;
+    options: unknown;
+  }[];
+};
+
+/** Active product with everything the product page needs, or null (missing or inactive). */
+export async function getProductBySlug(slug: string): Promise<ProductDetail | null> {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag(CATALOG_TAG);
+
+  const product = await db.product.findFirst({
+    where: { slug, isActive: true },
+    select: {
+      id: true,
+      slug: true,
+      name: true,
+      description: true,
+      brand: true,
+      type: true,
+      categoryId: true,
+      category: {
+        select: { name: true, slug: true, parent: { select: { name: true, slug: true } } },
+      },
+      images: { orderBy: { position: "asc" }, select: { id: true, url: true } },
+      variants: {
+        orderBy: [{ price: "asc" }, { id: "asc" }],
+        select: {
+          id: true,
+          sku: true,
+          label: true,
+          price: true,
+          compareAtPrice: true,
+          stock: true,
+          options: true,
+        },
+      },
+    },
+  });
+  return product;
+}
+
+/** Up to 4 other active products from the same category, newest first. */
+export async function getRelatedProducts(
+  productId: string,
+  categoryId: string,
+): Promise<ProductCardData[]> {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag(CATALOG_TAG);
+
+  const rows = await db.product.findMany({
+    where: { isActive: true, categoryId, id: { not: productId } },
+    orderBy: [{ createdAt: "desc" }, { id: "asc" }],
+    take: 4,
+    select: cardSelect,
+  });
+  return rows.map(toProductCardData);
+}
+
+/** Slugs used by generateStaticParams (Cache Components needs at least one sample per dynamic route). */
+export async function getProductSlugsForPrerender(limit = 50): Promise<string[]> {
+  const rows = await db.product.findMany({
+    where: { isActive: true },
+    orderBy: [{ createdAt: "desc" }, { id: "asc" }],
+    take: limit,
+    select: { slug: true },
+  });
+  return rows.map((r) => r.slug);
+}
+
+export async function getCategorySlugsForPrerender(): Promise<string[]> {
+  const rows = await db.category.findMany({ select: { slug: true } });
+  return rows.map((r) => r.slug);
+}

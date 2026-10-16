@@ -1,3 +1,4 @@
+import { Toaster } from "@/components/ui/sonner";
 import { SiteFooter } from "@/components/shop/site-footer";
 import { SiteHeader } from "@/components/shop/site-header";
 import { t } from "@/lib/strings";
@@ -16,6 +17,7 @@ export default function ShopLayout({ children }: LayoutProps<"/">) {
         {children}
       </main>
       <SiteFooter />
+      <Toaster richColors position="top-center" />
     </>
   );
 }
