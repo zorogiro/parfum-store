@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    # `next build` prerenders product and category pages from the database, so the build needs a
+    # reachable PostgreSQL. This is a throwaway container created for this run only: no real
+    # database, no real secret. Migrations and the production seed are applied to it, which also
+    # exercises both against a clean database (exactly the state of the first production deploy).
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci -d ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+      DIRECT_URL: postgresql://ci:ci@localhost:5432/ci
+      AUTH_SECRET: ci-dummy-secret-not-a-real-secret
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      NEXT_TELEMETRY_DISABLED: "1"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type-check
+        run: npm run typecheck
+
+      - name: Prettier
+        run: npx prettier --check .
+
+      # Unit tests only: the *.integration.test.ts files skip themselves without E2E_ALLOW_DB_WRITES.
+      - name: Unit tests
+        run: npm test
+
+      - name: Audit (production dependencies)
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Prepare the CI database
+        run: |
+          npx prisma migrate deploy
+          npm run db:seed:prod
+        env:
+          CONFIRM_PRODUCTION_SEED: "yes"
+          ADMIN_EMAIL: ci@example.com
+          ADMIN_PASSWORD: ci-dummy-password-123
+
+      - name: Build
+        run: npm run build

@@ -1,7 +1,11 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs/config";
 
 const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
 const isDev = process.env.NODE_ENV === "development";
+// placehold.co only hosts the sample images of `npm run db:seed` (dev data). The production
+// seed creates no images, so the Vercel Production environment does not allow it.
+const allowPlaceholderImages = process.env.VERCEL_ENV !== "production";
 
 /**
  * Content-Security-Policy, enforced on every page.
@@ -20,7 +24,7 @@ const csp = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://res.cloudinary.com https://placehold.co",
+  `img-src 'self' data: blob: https://res.cloudinary.com${allowPlaceholderImages ? " https://placehold.co" : ""}`,
   "font-src 'self' data:",
   `connect-src 'self' https://api.cloudinary.com${isDev ? " ws://localhost:* http://localhost:*" : ""}`,
   "object-src 'none'",
@@ -51,8 +55,10 @@ const nextConfig: NextConfig = {
         hostname: "res.cloudinary.com",
         pathname: cloudName ? `/${cloudName}/image/upload/**` : "/**",
       },
-      // Sample images created by `npm run db:seed` (dev data only).
-      { protocol: "https", hostname: "placehold.co", pathname: "/**" },
+      // Sample images created by `npm run db:seed` (dev data only, not allowed in production).
+      ...(allowPlaceholderImages
+        ? [{ protocol: "https" as const, hostname: "placehold.co", pathname: "/**" }]
+        : []),
     ],
   },
   /* config options here */
@@ -84,4 +90,19 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+/**
+ * Sentry is optional: only when a DSN is set at build time is the config wrapped (which adds the
+ * /monitoring tunnel rewrite). Source maps are uploaded only if SENTRY_AUTH_TOKEN, SENTRY_ORG and
+ * SENTRY_PROJECT are set. Browser events go through /monitoring, so the CSP needs no Sentry origin.
+ */
+const sentryEnabled = Boolean(process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN);
+
+export default sentryEnabled
+  ? withSentryConfig(nextConfig, {
+      silent: true,
+      telemetry: false,
+      tunnelRoute: "/monitoring",
+      widenClientFileUpload: false,
+      sourcemaps: { disable: !process.env.SENTRY_AUTH_TOKEN },
+    })
+  : nextConfig;

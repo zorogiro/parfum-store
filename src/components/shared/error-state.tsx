@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
+import { reportClientError } from "@/lib/report-error";
 import { t } from "@/lib/strings";
 import { format } from "@/lib/utils";
 
@@ -22,6 +23,7 @@ export function ErrorState({ error, reset, variant = "shop" }: Props) {
   useEffect(() => {
     // Console only: the message is not shown to the visitor.
     console.error(error);
+    reportClientError(error);
   }, [error]);
 
   const admin = variant === "admin";

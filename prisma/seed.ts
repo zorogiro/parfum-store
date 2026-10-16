@@ -2,67 +2,12 @@ import "dotenv/config";
 import bcrypt from "bcryptjs";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient, ProductType } from "../src/generated/prisma/client";
+import { CATEGORIES, DEFAULT_FEE, GOVERNORATES } from "./seed-data";
 
 const adapter = new PrismaPg({
   connectionString: process.env.DIRECT_URL ?? process.env.DATABASE_URL,
 });
 const prisma = new PrismaClient({ adapter });
-
-const DEFAULT_FEE = 8000;
-
-const GOVERNORATES = [
-  "Ariana",
-  "Béja",
-  "Ben Arous",
-  "Bizerte",
-  "Gabès",
-  "Gafsa",
-  "Jendouba",
-  "Kairouan",
-  "Kasserine",
-  "Kébili",
-  "Le Kef",
-  "Mahdia",
-  "La Manouba",
-  "Médenine",
-  "Monastir",
-  "Nabeul",
-  "Sfax",
-  "Sidi Bouzid",
-  "Siliana",
-  "Sousse",
-  "Tataouine",
-  "Tozeur",
-  "Tunis",
-  "Zaghouan",
-];
-
-const CATEGORIES = [
-  {
-    name: "Parfums",
-    slug: "parfums",
-    children: [
-      { name: "Parfums Homme", slug: "parfums-homme" },
-      { name: "Parfums Femme", slug: "parfums-femme" },
-    ],
-  },
-  {
-    name: "Vêtements",
-    slug: "vetements",
-    children: [
-      { name: "Vêtements Homme", slug: "vetements-homme" },
-      { name: "Vêtements Femme", slug: "vetements-femme" },
-    ],
-  },
-  {
-    name: "Accessoires",
-    slug: "accessoires",
-    children: [
-      { name: "Sacs", slug: "sacs" },
-      { name: "Montres", slug: "montres" },
-    ],
-  },
-];
 
 type SeedVariant = {
   sku: string;
