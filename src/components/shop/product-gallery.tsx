@@ -154,7 +154,8 @@ export function ProductGallery({ images, name }: { images: GalleryImage[]; name:
             src={current.url}
             alt={alt(index)}
             fill
-            priority={index === 0}
+            loading={index === 0 ? "eager" : "lazy"}
+            fetchPriority={index === 0 ? "high" : "auto"}
             sizes="(min-width: 1024px) 36rem, (min-width: 768px) 50vw, 100vw"
             className="object-cover"
             draggable={false}

@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { ShoppingBag } from "lucide-react";
 import { format } from "@/lib/utils";
 import { t } from "@/lib/strings";
@@ -17,7 +16,6 @@ const s = t.shop.header;
 export function CartButton() {
   const count = useCartItemCount();
   const { openDrawer, isHydrated } = useCart();
-  const pathname = usePathname();
   return (
     <Link
       href="/cart"
@@ -25,7 +23,16 @@ export function CartButton() {
       data-hydrated={isHydrated}
       aria-label={format(s.cartCount, { count })}
       onClick={(e) => {
-        if (pathname === "/cart" || e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+        // Read at click time: usePathname() here would force every storefront page (re-rendered
+        // after a catalog cache invalidation) to wrap the header in Suspense or answer 500.
+        if (
+          window.location.pathname === "/cart" ||
+          e.metaKey ||
+          e.ctrlKey ||
+          e.shiftKey ||
+          e.button !== 0
+        )
+          return;
         e.preventDefault();
         openDrawer();
       }}

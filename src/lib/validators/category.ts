@@ -1,3 +1,4 @@
+import "@/lib/zod-config";
 import { z } from "zod";
 import { SLUG_PATTERN } from "@/lib/slug";
 import { t } from "@/lib/strings";

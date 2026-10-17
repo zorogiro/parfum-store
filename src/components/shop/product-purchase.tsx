@@ -80,15 +80,40 @@ function PriceBlock({
   );
 }
 
+const ARROW_STEP: Record<string, number> = {
+  ArrowRight: 1,
+  ArrowDown: 1,
+  ArrowLeft: -1,
+  ArrowUp: -1,
+};
+
+/** WAI-ARIA radio group keyboard support: arrows move focus to the next enabled option and select it. */
+function onRadioGroupKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
+  const step = ARROW_STEP[event.key];
+  if (!step) return;
+  const radios = [
+    ...event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="radio"]:not(:disabled)'),
+  ];
+  const index = radios.indexOf(document.activeElement as HTMLButtonElement);
+  if (index < 0) return;
+  event.preventDefault();
+  const next = radios[(index + step + radios.length) % radios.length];
+  next.focus();
+  next.click();
+}
+
 function OptionButton({
   selected,
   disabled,
+  tabbable,
   onClick,
   children,
   label,
 }: {
   selected: boolean;
   disabled: boolean;
+  /** Roving tabindex: only one radio of a group is a Tab stop, arrows move between them. */
+  tabbable: boolean;
   onClick: () => void;
   children: React.ReactNode;
   label: string;
@@ -100,6 +125,7 @@ function OptionButton({
       aria-checked={selected}
       aria-label={label}
       disabled={disabled}
+      tabIndex={tabbable ? 0 : -1}
       onClick={onClick}
       className={cn(
         "focus-visible:ring-ring/50 relative inline-flex h-11 min-w-11 items-center justify-center rounded-lg border px-3 text-sm font-medium outline-none focus-visible:ring-3",
@@ -118,12 +144,14 @@ function OptionButton({
 function ColorSwatch({
   selected,
   disabled,
+  tabbable,
   onClick,
   name,
   label,
 }: {
   selected: boolean;
   disabled: boolean;
+  tabbable: boolean;
   onClick: () => void;
   name: string;
   label: string;
@@ -131,7 +159,13 @@ function ColorSwatch({
   const css = colorToCss(name);
   if (!css) {
     return (
-      <OptionButton selected={selected} disabled={disabled} onClick={onClick} label={label}>
+      <OptionButton
+        selected={selected}
+        disabled={disabled}
+        tabbable={tabbable}
+        onClick={onClick}
+        label={label}
+      >
         {name}
       </OptionButton>
     );
@@ -144,6 +178,7 @@ function ColorSwatch({
       aria-label={label}
       title={name}
       disabled={disabled}
+      tabIndex={tabbable ? 0 : -1}
       onClick={onClick}
       className={cn(
         "focus-visible:ring-ring/50 relative flex size-11 items-center justify-center rounded-full border-2 outline-none focus-visible:ring-3",
@@ -227,6 +262,11 @@ export function ProductPurchase({
 
       {axes.map((axis) => {
         const chosen = selection[axis];
+        // Roving tabindex: the chosen option, or the first available one when none is chosen.
+        const tabStop =
+          chosen && isOptionAvailable(model, selection, axis, chosen)
+            ? chosen
+            : model.values[axis].find((v) => isOptionAvailable(model, selection, axis, v));
         return (
           <div key={axis} className="space-y-2">
             <p id={`opt-${axis}`} className="text-sm font-medium">
@@ -238,9 +278,15 @@ export function ProductPurchase({
                 </span>
               )}
             </p>
-            <div role="radiogroup" aria-labelledby={`opt-${axis}`} className="flex flex-wrap gap-2">
+            <div
+              role="radiogroup"
+              aria-labelledby={`opt-${axis}`}
+              onKeyDown={onRadioGroupKeyDown}
+              className="flex flex-wrap gap-2"
+            >
               {model.values[axis].map((value) => {
                 const available = isOptionAvailable(model, selection, axis, value);
+                const tabbable = value === tabStop;
                 const text = optionText(axis, value);
                 const label = available ? text : format(s.optionSoldOut, { value: text });
                 return axis === "color" ? (
@@ -250,6 +296,7 @@ export function ProductPurchase({
                     label={label}
                     selected={chosen === value}
                     disabled={!available}
+                    tabbable={tabbable}
                     onClick={() => choose(axis, value)}
                   />
                 ) : (
@@ -258,6 +305,7 @@ export function ProductPurchase({
                     label={label}
                     selected={chosen === value}
                     disabled={!available}
+                    tabbable={tabbable}
                     onClick={() => choose(axis, value)}
                   >
                     {text}

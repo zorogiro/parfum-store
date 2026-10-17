@@ -32,3 +32,13 @@ export function revalidateCatalog() {
   revalidatePath("/", "layout"); // storefront pages
   updateTag("catalog"); // cached storefront queries (src/server/storefront.ts)
 }
+
+/**
+ * For the order flow: stock changed, so refresh the cached storefront queries ("Épuisé" badges,
+ * in-stock filter, product page stock labels). Only the `catalog` tag: unlike revalidateCatalog it
+ * does not purge every storefront path (and the admin pages) on each order.
+ * Call from server actions only.
+ */
+export function revalidateStock() {
+  updateTag("catalog");
+}

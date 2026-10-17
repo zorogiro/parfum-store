@@ -105,16 +105,20 @@ async function CategoryContent({
   );
 }
 
-export default async function CategoryPage({ params, searchParams }: PageProps<"/c/[slug]">) {
-  // Load before any Suspense boundary (and without a loading.tsx, which would be one) so
-  // notFound() runs before streaming starts and the response is a real 404.
+// `params` is read inside Suspense: after a catalog cache invalidation (every order, every admin
+// edit) Next re-renders the route and refuses (HTTP 500) to read params outside a boundary.
+// Real 404s for unknown slugs still come from the proxy, which rewrites them before rendering.
+export default function CategoryPage(props: PageProps<"/c/[slug]">) {
+  return (
+    <Suspense fallback={<ListingSkeleton />}>
+      <CategoryLoader {...props} />
+    </Suspense>
+  );
+}
+
+async function CategoryLoader({ params, searchParams }: PageProps<"/c/[slug]">) {
   const { slug } = await params;
   const category = await loadCategory(slug);
   if (!category) notFound();
-
-  return (
-    <Suspense fallback={<ListingSkeleton />}>
-      <CategoryContent category={category} searchParams={searchParams} />
-    </Suspense>
-  );
+  return <CategoryContent category={category} searchParams={searchParams} />;
 }

@@ -81,6 +81,14 @@ export function SiteFooter() {
                 </Link>
               </li>
             ))}
+            <li>
+              <Link
+                href="/suivi"
+                className="text-muted-foreground hover:text-foreground hover:underline"
+              >
+                {s.tracking}
+              </Link>
+            </li>
           </ul>
         </nav>
       </div>

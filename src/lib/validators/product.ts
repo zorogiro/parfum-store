@@ -1,3 +1,4 @@
+import "@/lib/zod-config";
 import { z } from "zod";
 import { MAX_PRODUCT_IMAGES } from "@/lib/cloudinary-validation";
 import { parseTND } from "@/lib/money";

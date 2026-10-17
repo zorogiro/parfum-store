@@ -74,7 +74,7 @@ export function ListingView({
           )
         ) : (
           <>
-            <ProductGrid products={result.items} />
+            <ProductGrid products={result.items} eagerCount={4} headingLevel={2} />
             <Pagination page={result.page} pageCount={result.pageCount} hrefForPage={hrefForPage} />
           </>
         )}
