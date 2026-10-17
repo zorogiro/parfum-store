@@ -12,7 +12,7 @@
     "lint": "eslint .",
     "test": "vitest run",
     "format": "prettier --write .",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "next typegen && tsc --noEmit",
     "db:migrate": "prisma migrate dev",
     "db:seed": "prisma db seed",
     "db:seed:prod": "tsx prisma/seed.production.ts",
